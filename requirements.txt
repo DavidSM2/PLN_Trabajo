@@ -1,0 +1,16 @@
+#######################
+###  Python 3.10.7  ###
+#######################
+
+#Crear entorno en conda: conda create -n .<nombre del entorno> python=3.10.7
+#Activar entorno: source activate .<nombre del entorno>
+#Comando para instalar pip en conda: conda install pip
+#Comando usando pip: pip install -r requirements.txt
+
+scikit-learn==1.2.2
+pandas==2.0.1
+numpy==1.24.3
+spacy==3.5.2
+es_core_news_lg @ https://github.com/explosion/spacy-models/releases/download/es_core_news_lg-3.5.0/es_core_news_lg-3.5.0-py3-none-any.whl
+
+
