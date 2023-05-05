@@ -2,8 +2,8 @@
 ###  Python 3.10.7  ###
 #######################
 
-#Crear entorno en conda: conda create -n .<nombre del entorno> python=3.10.7
-#Activar entorno: source activate .<nombre del entorno>
+#Crear entorno en conda: conda create -n .venv python=3.10.7
+#Activar entorno: source activate .venv
 #Comando para instalar pip en conda: conda install pip
 #Comando usando pip: pip install -r requirements.txt
 
