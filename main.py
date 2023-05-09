@@ -1,7 +1,6 @@
 from scipy import sparse
-from sklearn.linear_model import LogisticRegression
+from sklearn.calibration import LinearSVC
 from sklearn.multioutput import MultiOutputClassifier
-from sklearn.preprocessing import MultiLabelBinarizer
 from Model.CargarDatos import cargarDatos
 from Model.PreprocesadoTexto import normalizarDoc
 from sklearn.model_selection import train_test_split
@@ -71,24 +70,24 @@ def main():
                                                                   random_state=0
                                                                   )
     
-    tfidfVectorizer = TfidfVectorizer(use_idf=True, ngram_range=(1,2), min_df=25)
+    tfidfVectorizer = TfidfVectorizer()
     tfidf_train = tfidfVectorizer.fit_transform(train_corpus)
     tfidf_test = tfidfVectorizer.transform(test_corpus)
     y_train_sparse = sparse.csr_matrix(y_train)
     y_test_sparse = sparse.csr_matrix(y_test)
-    print('X_train dimension= ', tfidf_train.shape)
+    '''print('X_train dimension= ', tfidf_train.shape)
     print('X_test dimension= ', tfidf_test.shape)
     print('y_train dimension= ', y_train_sparse.shape)
-    print('y_train dimension= ', y_test_sparse.shape)
+    print('y_train dimension= ', y_test_sparse.shape)'''
     
-    modelLR = LogisticRegression(multi_class='ovr',solver='liblinear')
-    clf = MultiOutputClassifier(estimator=modelLR)
+    modelSvc = LinearSVC(multi_class='ovr')
+    clf = MultiOutputClassifier(estimator=modelSvc)
     
 
     clf.fit(tfidf_train, y_train_sparse.toarray())
     y_pred = clf.predict(tfidf_test)
     metrica = get_metrics(true_labels=y_test, predicted_labels=y_pred)
-    data = pd.DataFrame([('xD', metrica['Accuracy'], metrica['F1 Score'], metrica['Precision'],metrica['Recall'])], columns=['Modelo', 'Accuracy', 'F1 Score', 'Precision', 'Recall'])
+    data = pd.DataFrame([("multi_class='ovr'", metrica['Accuracy'], metrica['F1 Score'], metrica['Precision'],metrica['Recall'])], columns=['Modelo', 'Accuracy', 'F1 Score', 'Precision', 'Recall'])
     print(data)
     '''modelLR = LogisticRegression(multi_class='ovr',solver='liblinear')
     prediccion, metrica = train_predict_evaluate_model(classifier=modelLR,
