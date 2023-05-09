@@ -1,4 +1,6 @@
+from scipy import sparse
 from sklearn.linear_model import LogisticRegression
+from sklearn.multioutput import MultiOutputClassifier
 from sklearn.preprocessing import MultiLabelBinarizer
 from Model.CargarDatos import cargarDatos
 from Model.PreprocesadoTexto import normalizarDoc
@@ -61,22 +63,33 @@ def main():
     corpus = normalizarDoc(corpus)
     # print(arrayTweets)
     dfTags = dfCsv.drop('ID', axis=1).drop('Tweet', axis=1)
-    labels = dfTags.values.tolist()
+    labels = dfTags.to_numpy()
     # print(arrayTags)
     train_corpus, test_corpus, y_train, y_test = train_test_split(corpus,
                                                                   labels,
                                                                   test_size=0.3,
                                                                   random_state=0
                                                                   )
-    print(len(train_corpus))
-    print(len(test_corpus))
-    tfidfVectorizer = TfidfVectorizer(ngram_range=(1,3))
+    
+    tfidfVectorizer = TfidfVectorizer(use_idf=True, ngram_range=(1,2), min_df=25)
     tfidf_train = tfidfVectorizer.fit_transform(train_corpus)
     tfidf_test = tfidfVectorizer.transform(test_corpus)
-    mlb = MultiLabelBinarizer()
-    y_train_bin = mlb.fit_transform(y_train)
-    y_test_bin = mlb.fit_transform(y_test)
-    print(y_train)
+    y_train_sparse = sparse.csr_matrix(y_train)
+    y_test_sparse = sparse.csr_matrix(y_test)
+    print('X_train dimension= ', tfidf_train.shape)
+    print('X_test dimension= ', tfidf_test.shape)
+    print('y_train dimension= ', y_train_sparse.shape)
+    print('y_train dimension= ', y_test_sparse.shape)
+    
+    modelLR = LogisticRegression(multi_class='ovr',solver='liblinear')
+    clf = MultiOutputClassifier(estimator=modelLR)
+    
+
+    clf.fit(tfidf_train, y_train_sparse.toarray())
+    y_pred = clf.predict(tfidf_test)
+    metrica = get_metrics(true_labels=y_test, predicted_labels=y_pred)
+    data = pd.DataFrame([('xD', metrica['Accuracy'], metrica['F1 Score'], metrica['Precision'],metrica['Recall'])], columns=['Modelo', 'Accuracy', 'F1 Score', 'Precision', 'Recall'])
+    print(data)
     '''modelLR = LogisticRegression(multi_class='ovr',solver='liblinear')
     prediccion, metrica = train_predict_evaluate_model(classifier=modelLR,
                                                        train_features=tfidf_train.toarray(),
