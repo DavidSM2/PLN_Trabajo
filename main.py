@@ -84,7 +84,7 @@ def main():
                                                        test_features=tfidf_test.toarray(),
                                                        test_labels=y_test_bin)
     data = pd.DataFrame([('xD', metrica['Accuracy'], metrica['F1 Score'], metrica['Precision'],metrica['Recall'])], columns=['Modelo', 'Accuracy', 'F1 Score', 'Precision', 'Recall'])
-    print(data)'''
+    print(data)''' 
 
 if __name__ == "__main__":
     main()
