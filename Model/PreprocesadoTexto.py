@@ -32,11 +32,11 @@ def _normalizarTexto(texto):
     #Separamos los puntos, comas y menciones
     texto = _normalizarPuncts(texto)
     texto = _normalizarCaracteristicasTwets(texto)
-    '''doc = nlp(texto)
+    doc = nlp(texto)
     tokens = [t.lemma_.lower() if not t.ent_type_ == 'PER' else '_PERSONA_'
-              for t in doc if not t.is_punct and not t.is_stop and not t.is_space and len(t.text) > 1]
-    salida = ' '.join(tokens)'''
-    return texto
+              for t in doc if not t.is_punct and not t.is_space and len(t.text) > 1]
+    salida = ' '.join(tokens)
+    return salida
 
 def _normalizarPuncts(texto):
     texto = re.sub(r'(?P<punct>[\.\,])(?P<simbol>[\@\#\¿\?\¡\!\(\)])', r'\g<punct> \g<simbol>', texto)
@@ -44,5 +44,5 @@ def _normalizarPuncts(texto):
 
 def _normalizarCaracteristicasTwets(texto):
     texto = re.sub(r' @\S+', ' MENCION_TWEET', texto)
-    texto = re.sub(r' #\S+', ' HASTAG_TWEET', texto)
+    #texto = re.sub(r' #\S+', ' HASTAG_TWEET', texto)
     return texto
