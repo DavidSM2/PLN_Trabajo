@@ -10,5 +10,6 @@
 scikit-learn==1.2.2
 pandas==2.0.1
 numpy==1.24.3
+textacy==0.13.0
 spacy==3.5.2
 es_core_news_lg @ https://github.com/explosion/spacy-models/releases/download/es_core_news_lg-3.5.0/es_core_news_lg-3.5.0-py3-none-any.whl

@@ -1,5 +1,6 @@
 import re
 import spacy
+from textacy import preprocessing
 
 
 nlp = spacy.load("es_core_news_lg")
@@ -11,6 +12,7 @@ acentos = [
     ('ó', 'o'), ('ò', 'o'), ('ö', 'o'), ('ô', 'o'),
     ('ú', 'u'), ('ù', 'u'), ('ü', 'u'), ('û', 'u')
 ]
+   
 
 
 def normalizarDoc(doc):
@@ -23,26 +25,41 @@ def normalizarDoc(doc):
 
 def _normalizarTexto(texto):
     # separamos después de ciertos signos de puntuación
-    texto = re.sub(r"([\.\?])", r"\1 ", texto)
-    #Quitamos numeros, saltos de linea
-    texto = re.sub(r'(\d+|\n)','',texto)
-    #Quitamos acentos o dieresis
-    for letraAccent, letraNorm in acentos:
-        texto = re.sub(r'{0}'.format(letraAccent), letraNorm, texto)
-    #Separamos los puntos, comas y menciones
-    texto = _normalizarPuncts(texto)
-    texto = _normalizarCaracteristicasTwets(texto)
+    texto = _quitarSignos(texto)
+    texto = _quitarNumeros(texto)
+    #texto = _normalizarUnicodeWhitespace(texto)
+    
+    #texto = _normalizarCaracteristicasTwets(texto) #Esto no aporta mejoras
     doc = nlp(texto)
-    tokens = [t.lemma_.lower() if not t.ent_type_ == 'PER' else '_PERSONA_'
-              for t in doc if not t.is_punct and not t.is_space and len(t.text) > 1]
+    tokens = [t.lemma_.lower()
+              for t in doc if not t.is_punct and not t.is_space and len(t.text) > 2]
     salida = ' '.join(tokens)
+    #print(salida)
     return salida
 
+def _normalizarUnicodeWhitespace(texto):
+    texto = preprocessing.normalize.whitespace(texto)
+    texto = preprocessing.normalize.unicode(texto)
+    return texto
+def _quitarSignos(texto):
+    texto = re.sub(r"([\.\?])", r"\1 ", texto)
+    return texto
+
+def _quitarNumeros(texto):
+    texto = re.sub(r'(\d+|\n)','',texto)
+    return texto
+
+def _quitarAcentos(texto):
+    for letraAccent, letraNorm in acentos:
+        texto = re.sub(r'{0}'.format(letraAccent), letraNorm, texto)
+    return texto
 def _normalizarPuncts(texto):
     texto = re.sub(r'(?P<punct>[\.\,])(?P<simbol>[\@\#\¿\?\¡\!\(\)])', r'\g<punct> \g<simbol>', texto)
     return texto
-
 def _normalizarCaracteristicasTwets(texto):
-    texto = re.sub(r' @\S+', ' MENCION_TWEET', texto)
-    #texto = re.sub(r' #\S+', ' HASTAG_TWEET', texto)
+    texto = preprocessing.replace.hashtags(texto, repl='HASHTAGS')
+    '''texto = preprocessing.replace.emails(texto, repl='EMAIL')
+    texto = preprocessing.replace.emojis(texto, repl='EMOJI')
+    texto = preprocessing.replace.urls(texto, repl='URL')'''
+    texto = preprocessing.replace.user_handles(texto, repl='USUARIO')
     return texto

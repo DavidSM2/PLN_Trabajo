@@ -3,7 +3,7 @@ from sklearn.calibration import LinearSVC
 from sklearn.multioutput import MultiOutputClassifier
 from Model.CargarDatos import cargarDatos
 from Model.PreprocesadoTexto import normalizarDoc
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn import metrics
 import numpy as np
@@ -55,7 +55,32 @@ def train_predict_evaluate_model(classifier,
                            predicted_labels=predictions)
     return predictions, metricas
 
+def ajusteHiperparametros(param_grid, model, x_train, y_train, scoring):
+    # Búsqueda por validación cruzada
+    # ==============================================================================
 
+    grid = GridSearchCV(
+            estimator  = model,
+            param_grid = param_grid,
+            scoring    = 'accuracy',
+            n_jobs     = -1,
+            cv         = 5, 
+            verbose    = 0,
+            return_train_score = True
+        )
+
+    # Se asigna el resultado a _ para que no se imprima por pantalla
+    _ = grid.fit(X = x_train, y = y_train)
+
+    # Resultados del grid
+    # ==============================================================================
+    resultados = pd.DataFrame(grid.cv_results_)
+    filter = resultados.filter(regex = '(param.*|mean_t|std_t)')\
+        .drop(columns = 'params')\
+        .sort_values('mean_test_score', ascending = False) \
+        .head(5)
+    print(filter)
+    
 def main():
     dfCsv = cargarDatos('./Datos_test/sem_eval_train_es.csv')
     corpus = list(dfCsv['Tweet'])
@@ -74,13 +99,11 @@ def main():
     tfidf_train = tfidfVectorizer.fit_transform(train_corpus)
     tfidf_test = tfidfVectorizer.transform(test_corpus)
     y_train_sparse = sparse.csr_matrix(y_train)
-    y_test_sparse = sparse.csr_matrix(y_test)
-    '''print('X_train dimension= ', tfidf_train.shape)
-    print('X_test dimension= ', tfidf_test.shape)
-    print('y_train dimension= ', y_train_sparse.shape)
-    print('y_train dimension= ', y_test_sparse.shape)'''
     
-    modelSvc = LinearSVC(multi_class='ovr')
+    modelSvc = LinearSVC(C=0.7,  
+                         penalty='l1', 
+                         dual=False)
+    
     clf = MultiOutputClassifier(estimator=modelSvc)
     
 
@@ -89,14 +112,20 @@ def main():
     metrica = get_metrics(true_labels=y_test, predicted_labels=y_pred)
     data = pd.DataFrame([("multi_class='ovr'", metrica['Accuracy'], metrica['F1 Score'], metrica['Precision'],metrica['Recall'])], columns=['Modelo', 'Accuracy', 'F1 Score', 'Precision', 'Recall'])
     print(data)
-    '''modelLR = LogisticRegression(multi_class='ovr',solver='liblinear')
-    prediccion, metrica = train_predict_evaluate_model(classifier=modelLR,
-                                                       train_features=tfidf_train.toarray(),
-                                                       train_labels=y_train_bin,
-                                                       test_features=tfidf_test.toarray(),
-                                                       test_labels=y_test_bin)
-    data = pd.DataFrame([('xD', metrica['Accuracy'], metrica['F1 Score'], metrica['Precision'],metrica['Recall'])], columns=['Modelo', 'Accuracy', 'F1 Score', 'Precision', 'Recall'])
-    print(data)''' 
+# ==============================================================================
+    # Grid de hiperparámetros
+    #Con este metodo ajustamos los hiperparametros
+    '''param_grid = {
+        'C': [0.1, 0.5, 1, 5],
+        'multi_class': ['ovr', 'crammer_singer'],
+        'max_iter': [500, 1000, 2000]
+    }
+    ajusteHiperparametros(param_grid=param_grid,
+                            model=modelSvc,
+                            x_train=tfidf_train,
+                            y_train=y_train_sparse.toarray(),
+                            scoring='accuracy')'''
+# ==============================================================================  
 
 if __name__ == "__main__":
     main()
